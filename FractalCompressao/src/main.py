@@ -7,56 +7,69 @@ Created on 18/06/2015
 import os
 import sys
 import numpy
+import random
+from PIL import Image
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 # Specify image width and height
 w, h = 800, 600
+# Create window
+app = QApplication(sys.argv)
+window = QWidget()
+window.setWindowTitle("Fractal")
+label = QLabel(window)
 
 def criaImagem():     
-    # Specify real and imaginary range of image
-    re_min, re_max = -2.0, 2.0
-    im_min, im_max = -2.0, 2.0
-     
-    # Pick a value for c
-    c = complex(float(editA.text()),float(editB.text()))
-    print editA.text() + "  " + editB.text()
-    # Generate evenly spaced values over real and imaginary ranges
-    real_range = numpy.arange(re_min, re_max, (re_max - re_min) / w)
-    imag_range = numpy.arange(im_max, im_min, (im_min - im_max) / h)
-     
-    # Open output file and write PGM header info
-    fout = open('julia.pgm', 'w')
-    fout.write('P2\n# Julia Set image\n' + str(w) + ' ' + str(h) + '\n255\n')
-     
-    # Generate pixel values and write to file
-    for im in imag_range:
-        for re in real_range:
-            z = complex(re, im)
-            n = 255
-            while abs(z) < 10 and n >= 5:
-                z = z*z + c
-                n -= 5
-            # Write pixel to file
-            fout.write(str(n) + ' ')
-        # End of row
-        fout.write('\n')
-     
-    # Close file
-    fout.close()
+	# image size
+	imgx = 512
+	imgy = 512
+	image = Image.new("RGB", (imgx, imgy))
 
-    pixmap = QPixmap(logo)
-    label.setPixmap(pixmap)
+	# drawing area
+	xa = -2.0
+	xb = 2.0
+	ya = -1.5
+	yb = 1.5
+	maxIt = 255 # max iterations allowed
+
+	# find a good Julia set point using the Mandelbrot set
+	while True:
+	    cx = random.random() * (xb - xa) + xa
+	    cy = random.random() * (yb - ya) + ya
+	    c = cx + cy * 1j
+	    z = c
+	    for i in range(maxIt):
+	        if abs(z) > 2.0:
+	            break 
+	        z = z * z + c
+	    if i > 10 and i < 100:
+	        break
+
+	# draw the Julia set
+	for y in range(imgy):
+	    zy = y * (yb - ya) / (imgy - 1)  + ya
+	    for x in range(imgx):
+	        zx = x * (xb - xa) / (imgx - 1)  + xa
+	        z = zx + zy * 1j
+	        for i in range(maxIt):
+	            if abs(z) > 2.0:
+	                break 
+	            z = z * z + c
+	        image.putpixel((x, y), (i % 32 * 32, i % 16 * 16, i % 8 * 8))
+
+	image.save("juliaFr.png", "PNG")
+
+	picfile="juliaFr.png"
+	logo = os.getcwd() + "\\" + picfile
+	pixmap = QPixmap(logo)
+	label.setPixmap(pixmap)
+
     
 if __name__ == '__main__':
-    # Create window
-    app = QApplication(sys.argv)
-    window = QWidget()
-    window.setWindowTitle("Fractal")
-
     # Create widget
-    label = QLabel(window)
-    picfile="julia.pgm"
+    #picfile="julia.pgm"
+    picfile="juliaFr.png"
     logo = os.getcwd() + "\\" + picfile
     print logo
     if os.path.isfile(logo):
