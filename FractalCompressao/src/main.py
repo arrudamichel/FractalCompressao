@@ -35,24 +35,9 @@ def criaImagem():
 	yb = 1.5
 	# maximo de iteracoes
 	maxIt = 255
-	c = complex(float(editA.text()),float(editB.text()))	
+	c = complex(float(editA.text()),float(editB.text()))
 	
-	"""
-	# find a good Julia set point using the Mandelbrot set
-	while True:
-	    cx = random.random() * (xb - xa) + xa
-	    cy = random.random() * (yb - ya) + ya
-	    c = cx + cy * 1j
-	    z = c
-	    for i in range(maxIt):
-	        if abs(z) > 2.0:
-	            break 
-	        z = z * z + c
-	    if i > 10 and i < 100:
-	        break
-	"""
-	
-	# draw the Julia set
+	# Julia Set
 	for y in range(imgy):
 	    zy = y * (yb - ya) / (imgy - 1)  + ya
 	    for x in range(imgx):
@@ -181,13 +166,26 @@ if __name__ == '__main__':
 		pixmap = pyQtGui.QPixmap(logo)
 		label.setPixmap(pixmap)
 		#label.setAlignment(pyQtGui.AlignCenter)
-		window.resize(pixmap.width(),pixmap.height()+150)
+		window.resize(pixmap.width(),pixmap.height()+180)
+		
+		labelFuncao = pyQtGui.QLabel(window)
+		labelFuncao.setText("f = a + i*b")
+		labelFuncao.move(0, h)
+		
+		labelFuncao = pyQtGui.QLabel(window)
+		labelFuncao.setText("a:")
+		labelFuncao.move(0, h+15)
 		
 		editA = pyQtGui.QLineEdit(window)
-		editA.move(0, h)
+		editA.move(0, h+30)
 		editA.setFixedWidth(w)
+		
+		labelFuncao = pyQtGui.QLabel(window)
+		labelFuncao.setText("b:")
+		labelFuncao.move(0, h+50)
+		
 		editB = pyQtGui.QLineEdit(window)
-		editB.move(0, h+23)
+		editB.move(0, h+65)
 		editB.setFixedWidth(w)
 		
 		# Add a button
@@ -195,16 +193,16 @@ if __name__ == '__main__':
 		btn.clicked.connect(criaImagem)
 		btn.resize(btn.sizeHint())
 		btn.setFixedWidth(w)
-		btn.move(0, h+23*2)    	
+		btn.move(0, h+23*4)    	
 		
 		btnComprimir = pyQtGui.QPushButton('Comprimir', window)
-		btnComprimir.move(0,h+23*3)
+		btnComprimir.move(0,h+23*5)
 		btnComprimir.resize(btn.sizeHint())
 		btnComprimir.setFixedWidth(w)
 		btnComprimir.clicked.connect(comprime)
 		
 		btnDescomprimir = pyQtGui.QPushButton('Descomprir', window)
-		btnDescomprimir.move(0,h+23*4)
+		btnDescomprimir.move(0,h+23*6)
 		btnDescomprimir.resize(btn.sizeHint())
 		btnDescomprimir.setFixedWidth(w)
 		btnDescomprimir.clicked.connect(descomprime)
