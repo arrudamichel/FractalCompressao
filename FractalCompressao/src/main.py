@@ -1,28 +1,24 @@
 '''
 Created on 18/06/2015
 
-@author: Michel Arruda
+@author: Michel Arruda e Karine Gomes
 '''
 
 import os
 import sys
-import numpy
-import random
 from cStringIO import StringIO
 from scipy import misc
 from PIL import Image
 from PyQt4 import QtGui as pyQtGui
-from PyQt4 import QtCore as pyQtCore
-from rexec import FileDelegate
 
 # Specify image width and height
-w, h = 200, 200
+w, h = 400, 400
 # Create window
 app = pyQtGui.QApplication(sys.argv)
 window = pyQtGui.QWidget()
 window.setWindowTitle("Fractal")
 label = pyQtGui.QLabel(window)
-imgx, imgy = 200, 200
+imgx, imgy = 400, 400
 
 def criaImagem():     
 	# tamanho da imagem
@@ -31,8 +27,8 @@ def criaImagem():
 	# Pintando na area
 	xa = -2.0
 	xb = 2.0
-	ya = -1.5
-	yb = 1.5
+	ya = -2.0
+	yb = 2.0
 	# maximo de iteracoes
 	maxIt = 255
 	c = complex(float(editA.text()),float(editB.text()))
@@ -57,6 +53,7 @@ def criaImagem():
 	label.setPixmap(pixmap)
 
 def preCompressao():
+	print "Precompressao..."
 	julia = misc.imread("juliaFr.png")
 	
 	f = open('preCompressao.txt', 'w')
@@ -66,18 +63,20 @@ def preCompressao():
 		for pos_coluna in range(len(julia[pos_linha])):
 			arrayPixel = julia[pos_linha][pos_coluna]
 			for pos_array in range(len(arrayPixel)):				
-				palavra = palavra + str(arrayPixel[pos_array]) + ","
+				palavra = palavra + str(arrayPixel[pos_array]) + "_"
 			palavra = palavra[:-1]	
 			palavra = palavra + ";"
 		palavra = palavra[:-1]
 		palavra = palavra + "-"		
-	f.write(palavra)	
+		f.write(palavra)	
 	
 	return palavra
 
 def comprime():
 	
 	descomprimido = preCompressao()
+	
+	print "Comprime..."
 	fileCompressao = open('compressao.txt', 'w')
 	
     # Constroi o dicionario
@@ -87,6 +86,7 @@ def comprime():
 	w = ""
 	result = []
 	for c in descomprimido:
+		
 	    wc = w + c
 	    if wc in dictionary:
 	        w = wc
@@ -99,42 +99,86 @@ def comprime():
 	
 	# Saida dos dados de w
 	if w:
-	    result.append(dictionary[w])
-
-	fileCompressao.write(str(result))
+		result.append(dictionary[w])
+	
+	for i in range(len(result)):
+		fileCompressao.write(str(result[i])+",")
 	
 	return result
 
-def descomprime(comprimido):
+def descomprime():
+	print "Descomprime..."
+	fileDescomprime = open('descomprime.txt', 'w')
+	
+	fileCompressao = open('compressao.txt', 'r+')
+	comprimido = fileCompressao.readline().split(",")
+	
 	#Construindo o dicionario
 	dict_size = 256
 	dictionary = dict((chr(i), chr(i)) for i in xrange(dict_size))
-	
+	ascii = dict((chr(i), chr(i)) for i in xrange(dict_size))
 	result = StringIO()
-
+	
 	w = comprimido.pop(0)
+	
 	result.write(w)
 	for k in comprimido:
-	    if k in dictionary:
-	        entry = dictionary[k]
-	    elif k == dict_size:
-	        entry = w + w[0]
-	    else:
-	        raise ValueError('Compressao errada k: %s' % k)
-	    result.write(entry)
+		if k != "":
+			try:
+				if k in ascii.values():				
+					if k in dictionary:
+						entry = dictionary[k]
+					elif k == dict_size:
+					    entry = w + w[0]
+					else:
+					    raise ValueError('Compressao errada k: %s' % k)
+					
+					result.write(entry)
+					
+					# Insere w+entry[0] no dicionario
+					dictionary[dict_size] = w + entry[0]
+					dict_size += 1
+					
+					w = entry
+				else:
+					k = int(k)
+					if k in dictionary:
+						entry = dictionary[k]
+					elif k == dict_size:
+					    entry = w + w[0]
+					else:
+					    raise ValueError('Compressao errada k: %s' % k)
+					
+					result.write(entry)
+					
+					# Insere w+entry[0] no dicionario
+					dictionary[dict_size] = w + entry[0]
+					dict_size += 1
+					
+					w = entry
+			except :			
+				if k in dictionary:
+					entry = dictionary[k]
+				elif k == dict_size:
+				    entry = w + w[0]
+				else:
+				    raise ValueError('Compressao errada k: %s' % k)
+				
+				result.write(entry)
+				
+				# Insere w+entry[0] no dicionario
+				dictionary[dict_size] = w + entry[0]
+				dict_size += 1
+				
+				w = entry
 	
-	    # Insere w+entry[0] no dicionario
-	    dictionary[dict_size] = w + entry[0]
-	    dict_size += 1
-	
-	    w = entry
-	    
+	fileDescomprime.write(result.getvalue())
 	posdecompressao(result.getvalue())
 	
 	return 
 
 def posdecompressao(palavra):
-	
+	print "Poscomprime..."
 	image = Image.new("RGB", (imgx, imgy))
 
 	#seleciona as linhas
@@ -142,22 +186,12 @@ def posdecompressao(palavra):
 	for linha in range(len(linhas)):
 		pixels = linhas[linha].split(";")
 		for pixel in range(len(pixels)):
-			cor = pixels[pixel].split(",")					
+			cor = pixels[pixel].split("_")					
 			if cor[0]:				
 				image.putpixel((pixel,linha), tuple(map(int, cor)))
 
 	image.save("Descomp.png", "PNG")
 
-"""
-if __name__ == '__main__':
-	print "Cria imagem..."
-	criaImagem()
-	print "Comprimindo..."	
-	codigo = comprime()
-	print "Descomprimindo..."
-	descomprime(codigo)	
-"""
-    
 if __name__ == '__main__':
 	picfile="juliaFr.png"
 	logo = picfile
@@ -210,4 +244,4 @@ if __name__ == '__main__':
 		window.show()
 		app.exec_()
 	else:
-	    print "Imagem nao encontrada em ",os.getcwd()
+	    print "Imagem nao encontrada em ",os.getcwd(),"\\",picfile
